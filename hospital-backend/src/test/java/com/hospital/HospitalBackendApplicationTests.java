@@ -3,11 +3,14 @@ package com.hospital;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import org.springframework.test.context.ActiveProfiles;
+
 /**
  * This is the main test class for the application.
  * It's a simple integration test that checks if the Spring application context can start successfully.
  */
 @SpringBootTest // This annotation tells Spring Boot to load the entire application context for this test.
+@ActiveProfiles("test")
 class HospitalBackendApplicationTests {
 
     /**

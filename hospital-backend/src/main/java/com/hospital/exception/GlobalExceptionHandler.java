@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 
-import java.util.Date;
+
 
 @ControllerAdvice // This annotation makes it a global exception handler for the entire application.
 public class GlobalExceptionHandler {
@@ -20,22 +20,16 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<MessageResponse> resourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
-        MessageResponse message = new MessageResponse(
-                "Error: " + ex.getMessage());
-        return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new MessageResponse(ex.getMessage()));
     }
 
-    /**
-     * Handles all other exceptions that are not specifically caught.
-     * This acts as a final catch-all.
-     * @param ex The exception that was thrown.
-     * @param request The web request during which the exception occurred.
-     * @return A formatted ResponseEntity with a 500 INTERNAL_SERVER_ERROR status.
-     */
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<MessageResponse> handleRuntimeException(RuntimeException ex, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<MessageResponse> globalExceptionHandler(Exception ex, WebRequest request) {
-        MessageResponse message = new MessageResponse(
-                "An unexpected error occurred: " + ex.getMessage());
-        return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponse("An internal error occurred."));
     }
 }

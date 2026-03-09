@@ -1,76 +1,93 @@
 import React, { useState } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import Button from '../ui/Button';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
-    const [isOpen, setIsOpen] = useState(false);
+    const navigate = useNavigate();
+    const [menuOpen, setMenuOpen] = useState(false);
+    const isDoctor = user && user.roles && user.roles.some(r => r === 'ROLE_DOCTOR' || r === 'doctor');
+
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+    };
 
     return (
-        <nav className="bg-white shadow-md fixed w-full z-40">
-            <div className="container mx-auto flex justify-between items-center px-4 py-3">
-                {/* Logo */}
-                <Link to="/" className="flex items-center space-x-2">
-                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 14l9-5-9-5-9 5 9 5z" />
-                        <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222 4 2.222V20" />
-                    </svg>
-                    <span className="font-bold text-lg text-blue-600">MediConnect</span>
-                </Link>
-
-                {/* Desktop Nav */}
-                <div className="hidden md:flex items-center space-x-4">
-                    <NavLink to="/" className="nav-link">Home</NavLink>
-                    {user && user.role === 'doctor' && <NavLink to="/doctor-dashboard" className="nav-link">Dashboard</NavLink>}
-                    {user && user.role !== 'doctor' && <NavLink to="/book-appointment" className="nav-link">Appointments</NavLink>}
+        <nav className="navbar">
+            <div className="navbar-inner">
+                {/* Logo + Home side by side on the LEFT */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none' }}>
+                        <div className="navbar-logo-icon">M+</div>
+                        <span className="navbar-logo">MediSync</span>
+                    </Link>
+                    {/* Home link next to logo */}
+                    <NavLink to="/" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} end>
+                        Home
+                    </NavLink>
                 </div>
 
-                {/* Desktop Buttons */}
-                <div className="hidden md:flex items-center space-x-2">
-                    {user ? (
-                        <Button onClick={logout} variant="danger">Logout</Button>
-                    ) : (
+                {/* Center Nav Links (authenticated pages) */}
+                <div className="navbar-links">
+                    {user && !isDoctor && (
                         <>
-                            <Link to="/login"><Button variant="primary">Login</Button></Link>
-                            <Link to="/signup"><Button variant="secondary">Sign Up</Button></Link>
+                            <NavLink to="/book-appointment" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Book</NavLink>
+                            <NavLink to="/appointments" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Appointments</NavLink>
+                            <NavLink to="/documents" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Documents</NavLink>
                         </>
                     )}
+                    {user && isDoctor && (
+                        <NavLink to="/doctor-dashboard" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Dashboard</NavLink>
+                    )}
+                    {user && <NavLink to="/profile" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Profile</NavLink>}
                 </div>
 
-                {/* Mobile Menu Button */}
-                <div className="md:hidden">
-                    <button onClick={() => setIsOpen(!isOpen)} className="p-2 rounded-md text-gray-500 hover:bg-gray-100">
-                        {isOpen ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        )}
+                {/* Right Actions */}
+                <div className="navbar-actions">
+                    {user ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
+                                👤 {user.name || user.email}
+                            </span>
+                            <button className="btn btn-danger btn-sm" onClick={handleLogout}>Logout</button>
+                        </div>
+                    ) : (
+                        <>
+                            <Link to="/login"><button className="btn btn-outline btn-sm">Login</button></Link>
+                            <Link to="/signup"><button className="btn btn-primary btn-sm">Sign Up</button></Link>
+                        </>
+                    )}
+                    {/* Mobile hamburger */}
+                    <button
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem' }}
+                        className="mobile-menu-btn"
+                    >
+                        {menuOpen ? '✕' : '☰'}
                     </button>
                 </div>
             </div>
 
             {/* Mobile Menu */}
-            {isOpen && (
-                <div className="md:hidden bg-white shadow-lg border-t border-gray-200">
-                    <NavLink to="/" className="block px-4 py-2">Home</NavLink>
-                    {user && user.role === 'doctor' && <NavLink to="/doctor-dashboard" className="block px-4 py-2">Dashboard</NavLink>}
-                    {user && user.role !== 'doctor' && <NavLink to="/book-appointment" className="block px-4 py-2">Appointments</NavLink>}
-
-                    <div className="px-4 py-2">
-                        {user ? (
-                            <Button onClick={logout} variant="danger" className="w-full">Logout</Button>
-                        ) : (
-                            <>
-                                <Link to="/login"><Button variant="primary" className="w-full mb-2">Login</Button></Link>
-                                <Link to="/signup"><Button variant="secondary" className="w-full">Sign Up</Button></Link>
-                            </>
-                        )}
+            {menuOpen && (
+                <div style={{ background: 'white', borderTop: '1px solid #e2e8f0', padding: '1rem 1.5rem' }}>
+                    <NavLink to="/" className="nav-link" style={{ display: 'block', marginBottom: '0.5rem' }} onClick={() => setMenuOpen(false)}>Home</NavLink>
+                    {user && !isDoctor && <>
+                        <NavLink to="/book-appointment" className="nav-link" style={{ display: 'block', marginBottom: '0.5rem' }} onClick={() => setMenuOpen(false)}>Book Appointment</NavLink>
+                        <NavLink to="/appointments" className="nav-link" style={{ display: 'block', marginBottom: '0.5rem' }} onClick={() => setMenuOpen(false)}>My Appointments</NavLink>
+                        <NavLink to="/documents" className="nav-link" style={{ display: 'block', marginBottom: '0.5rem' }} onClick={() => setMenuOpen(false)}>Documents</NavLink>
+                    </>}
+                    {user && isDoctor && <NavLink to="/doctor-dashboard" className="nav-link" style={{ display: 'block', marginBottom: '0.5rem' }} onClick={() => setMenuOpen(false)}>Dashboard</NavLink>}
+                    {user && <NavLink to="/profile" className="nav-link" style={{ display: 'block', marginBottom: '0.5rem' }} onClick={() => setMenuOpen(false)}>Profile</NavLink>}
+                    <div style={{ marginTop: '1rem' }}>
+                        {user
+                            ? <button className="btn btn-danger w-full" onClick={() => { handleLogout(); setMenuOpen(false); }}>Logout</button>
+                            : <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <Link to="/login" style={{ flex: 1 }} onClick={() => setMenuOpen(false)}><button className="btn btn-outline w-full">Login</button></Link>
+                                <Link to="/signup" style={{ flex: 1 }} onClick={() => setMenuOpen(false)}><button className="btn btn-primary w-full">Sign Up</button></Link>
+                              </div>
+                        }
                     </div>
                 </div>
             )}

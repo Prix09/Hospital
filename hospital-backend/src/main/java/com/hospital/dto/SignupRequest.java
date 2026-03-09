@@ -25,6 +25,9 @@ public class SignupRequest {
     private String email;
 
     private Set<String> role;
+    
+    @Size(max = 50)
+    private String specialization;
 
     @NotBlank
     @Size(min = 6, max = 40)

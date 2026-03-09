@@ -27,12 +27,12 @@ public class Appointment {
     private Long id;
 
     // Many appointments can be associated with one patient (User)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "patient_id", nullable = false)
     private User patient;
 
     // Many appointments can be associated with one doctor (User)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "doctor_id", nullable = false)
     private User doctor;
 
@@ -44,4 +44,18 @@ public class Appointment {
     private AppointmentStatus status;
 
     private String videoSessionId;
+
+    @Column(columnDefinition = "TEXT")
+    private String reason;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        if (status == null) {
+            status = AppointmentStatus.SCHEDULED;
+        }
+    }
 }

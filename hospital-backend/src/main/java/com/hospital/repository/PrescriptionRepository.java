@@ -1,11 +1,14 @@
 package com.hospital.repository;
 
 import com.hospital.entity.Prescription;
+import com.hospital.entity.Appointment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface PrescriptionRepository extends JpaRepository<Prescription, Long> {
-    // JpaRepository provides all necessary basic CRUD operations.
-    // Custom methods can be added here if needed in the future.
+    Optional<Prescription> findByAppointment(Appointment appointment);
+    Optional<Prescription> findByAppointmentId(Long appointmentId);
 }

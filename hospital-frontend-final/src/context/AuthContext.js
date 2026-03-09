@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // load user from localStorage on mount
+    // Token stored in user object — load from localStorage on mount
     useEffect(() => {
         const s = localStorage.getItem('authUser');
         if (s) {
@@ -17,23 +17,28 @@ export const AuthProvider = ({ children }) => {
                 const parsed = JSON.parse(s);
                 setUser(parsed);
                 if (parsed.token) apiClient.defaults.headers.common['Authorization'] = `Bearer ${parsed.token}`;
-            } catch (e) {
+            } catch {
                 localStorage.removeItem('authUser');
             }
         }
         setLoading(false);
     }, []);
 
-    // login returns the user object (with token)
-    const login = async (email, password) => {
-        const data = await authApi.login({ email, password });
-        // Expecting backend JwtResponse like: { token, id, email, name, roles }
+    /**
+     * Login with USERNAME (not email) — backend uses username for auth.
+     */
+    const login = async (username, password) => {
+        // Backend Spring Security expects 'username' and 'password'
+        const data = await authApi.login({ username, password });
+        // Backend JwtResponse: { token, id, email, name, roles: [...] }
         const authUser = {
             id: data.id,
             email: data.email,
-            name: data.name,
+            name: data.name || data.username || username,
             roles: data.roles || [],
             token: data.token,
+            // Derived convenience field
+            token_field: data.token,
         };
         localStorage.setItem('authUser', JSON.stringify(authUser));
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${authUser.token}`;
@@ -41,13 +46,10 @@ export const AuthProvider = ({ children }) => {
         return authUser;
     };
 
-    // signup(name, email, password, roleString) -> posts then logs in
-    const signup = async (name, email, password, role = 'patient') => {
-        // backend expects roles as array (Set<String>), so send as array of strings
-        const roles = [role]; // e.g. ['patient'] or ['doctor']
-        await authApi.signup({ name, email, password, roles });
-        // after signup, automatically login and return user
-        return login(email, password);
+    const signup = async (username, name, email, password, role = 'patient', specialization = '') => {
+        const roles = [role];
+        await authApi.signup({ username, name, email, password, role: roles, specialization });
+        return login(username, password);
     };
 
     const logout = () => {
@@ -57,7 +59,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, signup, logout, token: user?.token }}>
             {!loading && children}
         </AuthContext.Provider>
     );

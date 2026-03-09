@@ -71,6 +71,10 @@ public class AuthService {
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword())
         );
+        
+        if (signUpRequest.getSpecialization() != null) {
+            user.setSpecialization(signUpRequest.getSpecialization());
+        }
 
         Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();

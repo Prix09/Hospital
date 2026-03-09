@@ -33,6 +33,18 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.approveAppointment(id));
     }
 
+    @PutMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('PATIENT') or hasRole('DOCTOR')")
+    public ResponseEntity<AppointmentDto> cancelAppointment(@PathVariable Long id) {
+        return ResponseEntity.ok(appointmentService.cancelAppointment(id));
+    }
+
+    @PutMapping("/{id}/reschedule")
+    @PreAuthorize("hasRole('PATIENT')")
+    public ResponseEntity<AppointmentDto> rescheduleAppointment(@PathVariable Long id, @RequestBody AppointmentDto rescheduleDto) {
+        return ResponseEntity.ok(appointmentService.rescheduleAppointment(id, rescheduleDto));
+    }
+
     @GetMapping("/patient/{patientId}")
     @PreAuthorize("hasRole('PATIENT') or hasRole('DOCTOR')")
     public ResponseEntity<List<AppointmentDto>> getPatientAppointments(@PathVariable Long patientId) {

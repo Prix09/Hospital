@@ -1,113 +1,94 @@
-// src/pages/SignupPage.js
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 export default function SignupPage() {
-    // ✅ 1. Add state for username
-    const [username, setUsername] = useState('');
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [role, setRole] = useState('patient');
-    const [message, setMessage] = useState('');
+    const [form, setForm] = useState({
+        username: '', name: '', email: '', password: '', role: 'patient', specialization: ''
+    });
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { signup } = useAuth();
     const navigate = useNavigate();
+
+    const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setMessage('');
+        setError('');
+        setLoading(true);
         try {
-            const res = await fetch('http://localhost:8080/api/auth/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    // ✅ 3. Include username in the request body
-                    username,
-                    name,
-                    email,
-                    password,
-                    // The backend expects a list/set of roles
-                    role: [role]
-                }),
-            });
-
-            const responseData = await res.text();
-
-            if (!res.ok) {
-                // If the response is not OK, the body is the error message
-                throw new Error(responseData);
-            }
-
-            setMessage('Signup successful! Redirecting to login...');
-            setTimeout(() => {
-                navigate('/login');
-            }, 2000);
-
+            const user = await signup(form.username, form.name, form.email, form.password, form.role, form.role === 'doctor' ? form.specialization : '');
+            const isDoctor = user && user.roles && user.roles.some(r => r === 'ROLE_DOCTOR' || r === 'doctor');
+            navigate(isDoctor ? '/doctor-dashboard' : '/book-appointment');
         } catch (err) {
-            setMessage(err.message || 'Signup failed. Please try again.');
-            console.error('Signup error:', err);
+            setError(err.response?.data?.message || err.message || 'Signup failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
-                <h2 className="text-3xl font-bold text-center text-gray-800">Create an Account</h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="auth-page">
+            <div className="auth-card slide-up" style={{ maxWidth: '500px' }}>
+                <div className="auth-logo">
+                    <div className="auth-logo-icon">M+</div>
+                    <h1 className="auth-title">Create Account</h1>
+                    <p className="auth-subtitle">Join MediSync today — it's free</p>
+                </div>
 
-                    {/* ✅ 2. Add input field for username */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Username</label>
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            required
-                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md"
-                        />
+                {error && <div className="alert alert-error">{error}</div>}
+
+                <form onSubmit={handleSubmit}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div className="form-group">
+                            <label className="form-label">Username</label>
+                            <input className="form-input" type="text" name="username" placeholder="username" value={form.username} onChange={handleChange} required />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Full Name</label>
+                            <input className="form-input" type="text" name="name" placeholder="John Doe" value={form.name} onChange={handleChange} required />
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md"
-                        />
+                    <div className="form-group">
+                        <label className="form-label">Email Address</label>
+                        <input className="form-input" type="email" name="email" placeholder="john@example.com" value={form.email} onChange={handleChange} required />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md"
-                        />
+
+                    <div className="form-group">
+                        <label className="form-label">Password</label>
+                        <input className="form-input" type="password" name="password" placeholder="Min. 6 characters" value={form.password} onChange={handleChange} required minLength="6" />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">I am a:</label>
-                        <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+
+                    <div className="form-group">
+                        <label className="form-label">I am a</label>
+                        <select className="form-select" name="role" value={form.role} onChange={handleChange}>
                             <option value="patient">Patient</option>
                             <option value="doctor">Doctor</option>
                         </select>
                     </div>
-                    {message && <p className="text-sm text-red-600 text-center">{message}</p>}
-                    <button type="submit" className="w-full py-3 px-4 bg-blue-600 text-white rounded-md">Sign Up</button>
+
+                    {form.role === 'doctor' && (
+                        <div className="form-group">
+                            <label className="form-label">Specialization</label>
+                            <input className="form-input" type="text" name="specialization" placeholder="e.g. Cardiology, Orthopedics" value={form.specialization} onChange={handleChange} required />
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={loading}
+                        style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', marginTop: '0.5rem' }}
+                    >
+                        {loading ? 'Creating account...' : 'Create Account'}
+                    </button>
                 </form>
-                <p className="text-sm text-center text-gray-600">
-                    Already have an account? <Link to="/login" className="text-blue-600">Log in</Link>
+
+                <p style={{ textAlign: 'center', marginTop: '1.5rem', color: '#64748b', fontSize: '0.9rem' }}>
+                    Already have an account?{' '}
+                    <Link to="/login" style={{ color: '#4f46e5', fontWeight: 600 }}>Sign in</Link>
                 </p>
             </div>
         </div>

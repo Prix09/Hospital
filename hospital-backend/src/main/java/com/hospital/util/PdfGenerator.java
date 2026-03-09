@@ -1,6 +1,7 @@
 package com.hospital.util;
 
 import com.hospital.entity.Prescription;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -68,6 +69,20 @@ public class PdfGenerator {
                 contentStream.newLineAtOffset(50, 520);
                 contentStream.showText(prescription.getMedication());
                 contentStream.endText();
+
+                if (prescription.getInstructions() != null && !prescription.getInstructions().isEmpty()) {
+                    contentStream.beginText();
+                    contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                    contentStream.newLineAtOffset(50, 480);
+                    contentStream.showText("Instructions:");
+                    contentStream.endText();
+
+                    contentStream.beginText();
+                    contentStream.setFont(PDType1Font.HELVETICA, 12);
+                    contentStream.newLineAtOffset(50, 460);
+                    contentStream.showText(prescription.getInstructions());
+                    contentStream.endText();
+                }
             }
 
             document.save(baos);

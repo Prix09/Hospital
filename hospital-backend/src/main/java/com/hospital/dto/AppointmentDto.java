@@ -16,5 +16,6 @@ public class AppointmentDto {
     private LocalDateTime appointmentTime;
     private AppointmentStatus status; // This will now resolve correctly
     private String videoSessionId;
+    private String reason;
 }
 
